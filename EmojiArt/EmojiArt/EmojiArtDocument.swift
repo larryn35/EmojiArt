@@ -47,7 +47,10 @@ class EmojiArtDocument: ObservableObject {
             DispatchQueue.global(qos: .userInitiated).async {
                 if let imageData = try? Data(contentsOf: url) {
                     DispatchQueue.main.async {
-                        self.backgroundImage = UIImage(data: imageData)
+                        // prevents older image from being loaded if user dropped new one in
+                        if url == self.emojiArt.backgroundURL {
+                            self.backgroundImage = UIImage(data: imageData)
+                        }
                     }
                 }
             }

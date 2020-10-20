@@ -16,8 +16,8 @@ struct EmojiArt {
     struct Emoji: Identifiable {
         var id: Int
         let text: String
-        var x: Int
-        var y: Int
+        var x: Int // offset from center
+        var y: Int // offset from center
         var size: Int
         
         // restricts emoji creating to func addEmoji, preventing someone from creating an emoji with their own ID and adding it to emojis
