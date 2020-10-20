@@ -19,7 +19,7 @@ struct EmojiArtDocumentView: View {
                     ForEach(EmojiArtDocument.palette.map { String($0) }, id: \.self) { emoji in
                         Text(emoji)
                             .font(Font.system(size: defaultEmojiSize))
-                            .onDrag { return NSItemProvider(object: emoji as NSString)}
+                            .onDrag { NSItemProvider(object: emoji as NSString) }
                     }
                 }
             }
@@ -27,23 +27,21 @@ struct EmojiArtDocumentView: View {
             
             GeometryReader { geometry in
                 ZStack {
-                    Rectangle()
-                        .foregroundColor(.white)
-                        .edgesIgnoringSafeArea([.horizontal, .bottom])
-                        .onDrop(of: ["public.image", "public.text"], isTargeted: nil) { providers, location in
-                            // for dropped emoji
-                            var location = geometry.convert(location, from: .global)
-                            // location is in iOS coordination - (0,0) is in upper left
-                            location = CGPoint(x: location.x - geometry.size.width/2, y: location.y - geometry.size.height/2)
-                            return self.drop(providers: providers, at: location)
-                        }
-                        .overlay(
-                            Group {
-                                if self.document.backgroundImage != nil {
-                                    Image(uiImage: self.document.backgroundImage!)
-                                }
+                    Color.white.overlay(
+                        Group {
+                            if self.document.backgroundImage != nil {
+                                Image(uiImage: self.document.backgroundImage!)
                             }
+                        }
                     )
+                    .edgesIgnoringSafeArea([.horizontal, .bottom])
+                    .onDrop(of: ["public.image", "public.text"], isTargeted: nil) { providers, location in
+                        // for dropped emoji
+                        var location = geometry.convert(location, from: .global)
+                        // location is in iOS coordination - (0,0) is in upper left
+                        location = CGPoint(x: location.x - geometry.size.width/2, y: location.y - geometry.size.height/2)
+                        return self.drop(providers: providers, at: location)
+                    }
                     
                     ForEach(self.document.emojis) { emoji in
                         Text(emoji.text)
