@@ -17,6 +17,8 @@ class EmojiArtDocument: ObservableObject {
     
     @Published private(set) var backgroundImage: UIImage?
     
+    var emojis: [EmojiArt.Emoji] { emojiArt.emojis }
+    
     //MARK: - Intent(s)
     // View can call these, since it can't directly acess emojiArt
     func addEmoji(_ emoji: String, at location: CGPoint, size: CGFloat) {
@@ -56,4 +58,11 @@ class EmojiArtDocument: ObservableObject {
             }
         }
     }
+}
+
+
+// Avoids using Int in view, view model interprets data from the model
+extension EmojiArt.Emoji {
+    var fontSize: CGFloat { CGFloat(self.size) }
+    var location: CGPoint { CGPoint(x: CGFloat(x), y: CGFloat(y)) }
 }
