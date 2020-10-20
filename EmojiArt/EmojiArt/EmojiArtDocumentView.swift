@@ -28,37 +28,60 @@ struct EmojiArtDocumentView: View {
             GeometryReader { geometry in
                 ZStack {
                     Color.white.overlay(
-                        Group {
-                            if self.document.backgroundImage != nil {
-                                Image(uiImage: self.document.backgroundImage!)
-                            }
-                        }
+                        OptionalImage(uiImage: document.backgroundImage)
+                            .scaleEffect(zoomScale)
                     )
-                    .edgesIgnoringSafeArea([.horizontal, .bottom])
-                    .onDrop(of: ["public.image", "public.text"], isTargeted: nil) { providers, location in
-                        // for dropped emoji
-                        var location = geometry.convert(location, from: .global)
-                        // location is in iOS coordination - (0,0) is in upper left
-                        location = CGPoint(x: location.x - geometry.size.width/2, y: location.y - geometry.size.height/2)
-                        return self.drop(providers: providers, at: location)
-                    }
+                    .gesture(doubleTapToZoom(in: geometry.size))
                     
                     ForEach(self.document.emojis) { emoji in
                         Text(emoji.text)
-                            .font(font(for: emoji))
+                            .font(animatableWithSize: emoji.fontSize * zoomScale)
                             .position(position(for: emoji, in: geometry.size))
                     }
+                }
+                .clipped() // prevent large images from blocking our HStack of emojis
+                .edgesIgnoringSafeArea([.horizontal, .bottom])
+                .onDrop(of: ["public.image", "public.text"], isTargeted: nil) { providers, location in
+                    // for dropped emoji
+                    var location = geometry.convert(location, from: .global)
+                    // location is in iOS coordination - (0,0) is in upper left
+                    location = CGPoint(x: location.x - geometry.size.width/2, y: location.y - geometry.size.height/2)
+                    location = CGPoint(x: location.x / zoomScale, y: location.y / zoomScale)
+                    return self.drop(providers: providers, at: location)
                 }
             }
         }
     }
     
-    private func font(for emoji: EmojiArt.Emoji) -> Font {
-        Font.system(size: emoji.fontSize)
+    @State private var zoomScale: CGFloat = 1.0
+    
+    private func doubleTapToZoom(in size: CGSize) -> some Gesture {
+        TapGesture(count: 2)
+            .onEnded {
+                withAnimation {
+                    zoomToFit(self.document.backgroundImage, in: size)
+                }
+            }
     }
     
+    private func zoomToFit(_ image: UIImage?, in size: CGSize) {
+        if let image = image, image.size.width > 0, image.size.height > 0 {
+            let hZoom = size.width / image.size.width
+            let vZoom = size.height / image.size.height
+            zoomScale = min(hZoom, vZoom)
+        }
+    }
+    
+//    Use font modifier to fix emoji resize animation upon double tap to fit image
+//    private func font(for emoji: EmojiArt.Emoji) -> Font {
+//        Font.system(size: emoji.fontSize * zoomScale)
+//    }
+    
     private func position(for emoji: EmojiArt.Emoji, in size: CGSize) -> CGPoint {
-        CGPoint(x: emoji.location.x + size.width/2, y: emoji.location.y + size.height/2)
+        var location = emoji.location
+        location = CGPoint(x: location.x * zoomScale, y: location.y * zoomScale)
+        location = CGPoint(x: location.x + size.width/2, y: location.y + size.height/2)
+        return location
     }
     
     private func drop(providers: [NSItemProvider], at location: CGPoint) -> Bool {
