@@ -13,20 +13,9 @@ class EmojiArtDocument: ObservableObject {
     
     static let palette: String = "🐶🐱🐭🐹🦊🐻🐼"
     
-//    @Published private var emojiArt: EmojiArt = EmojiArt() {
-//        didSet {
-//            print("json = \(emojiArt.json?.utf8 ?? "nil")")
-//        }
-//    }
-    
-    // @Published // workaround for property observer problem with property wrappers
-    private var emojiArt: EmojiArt {
-        willSet {
-            objectWillChange.send()
-        }
+    @Published private var emojiArt: EmojiArt = EmojiArt() {
         didSet {
             print("json = \(emojiArt.json?.utf8 ?? "nil")")
-            UserDefaults.standard.set(emojiArt.json, forKey: EmojiArtDocument.untitled)
         }
     }
     
@@ -60,9 +49,15 @@ class EmojiArtDocument: ObservableObject {
         }
     }
     
-    func setBackgroundURL(_ url: URL?) {
-        emojiArt.backgroundURL = url?.imageURL
-        fetchBackgroundImageData()
+    // make gettable for isLoading var
+    var backgroundURL: URL? {
+        get {
+            emojiArt.backgroundURL
+        }
+        set {
+            emojiArt.backgroundURL = newValue?.imageURL
+            fetchBackgroundImageData()
+        }
     }
     
     private func fetchBackgroundImageData() {

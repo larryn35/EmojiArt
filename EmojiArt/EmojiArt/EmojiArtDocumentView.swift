@@ -34,10 +34,18 @@ struct EmojiArtDocumentView: View {
                     )
                     .gesture(doubleTapToZoom(in: geometry.size))
                     
-                    ForEach(self.document.emojis) { emoji in
-                        Text(emoji.text)
-                            .font(animatableWithSize: emoji.fontSize * zoomScale)
-                            .position(position(for: emoji, in: geometry.size))
+                    // Emojis appear before backgroundImage on loading
+                    if self.isLoading {
+                        // Display loading icon
+                        Image(systemName: "timer")
+                            .imageScale(.large)
+                            .spinning()
+                    } else {
+                        ForEach(self.document.emojis) { emoji in
+                            Text(emoji.text)
+                                .font(animatableWithSize: emoji.fontSize * zoomScale)
+                                .position(position(for: emoji, in: geometry.size))
+                        }
                     }
                 }
                 .clipped() // prevent large images from blocking our HStack of emojis
@@ -55,6 +63,10 @@ struct EmojiArtDocumentView: View {
                 }
             }
         }
+    }
+    
+    var isLoading: Bool {
+        document.backgroundURL != nil && document.backgroundImage == nil
     }
     
     @State private var steadyStatePanOffset: CGSize = .zero
@@ -126,7 +138,7 @@ struct EmojiArtDocumentView: View {
     private func drop(providers: [NSItemProvider], at location: CGPoint) -> Bool {
         var found = providers.loadFirstObject(ofType: URL.self) { url in
             print("dropped \(url)")
-            self.document.setBackgroundURL(url)
+            document.backgroundURL = url
         }
         // emoji dropped
         if !found {
