@@ -77,20 +77,28 @@ struct PaletteEditor: View {
                 
                 // Remove Emoji
                 Section(header: Text("Remove Emoji")) {
-                    VStack {
-                        ForEach(chosenPalette.map { String($0) }, id: \.self) { emoji in
+                    Grid(chosenPalette.map { String($0) }, id: \.self) { emoji in
                             Text(emoji)
+                                .font(.system(size: fontSize))
                                 .onTapGesture {
                                     chosenPalette = document.removeEmoji(emoji, fromPalette: chosenPalette)
                                 }
                         }
-                    }
+                    .frame(height: height)
                 }
             }
             //            Spacer() - no longer needed, forms take up entire space given to it
         }
         .onAppear { paletteName = document.paletteNames[chosenPalette] ?? "" }
     }
+    
+    //MARK: - Drawing Constants
+    
+    var height: CGFloat {
+        CGFloat((chosenPalette.count - 1) / 6) * 70 + 70
+    }
+    
+    let fontSize: CGFloat = 40
 }
 
 
