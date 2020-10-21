@@ -14,12 +14,6 @@ class EmojiArtDocument: ObservableObject {
     
     static let palette: String = "🐶🐱🐭🐹🦊🐻🐼"
     
-//    @Published private var emojiArt: EmojiArt = EmojiArt() {
-//        didSet {
-//            print("json = \(emojiArt.json?.utf8 ?? "nil")")
-//        }
-//    }
-    
     // use projectedValue ($emojiArt) of published struct
     @Published private var emojiArt: EmojiArt
     
@@ -71,20 +65,34 @@ class EmojiArtDocument: ObservableObject {
             fetchBackgroundImageData()
         }
     }
+    //    private func fetchBackgroundImageData() {
+//        backgroundImage = nil
+//        if let url = self.emojiArt.backgroundURL {
+//            DispatchQueue.global(qos: .userInitiated).async {
+//                if let imageData = try? Data(contentsOf: url) {
+//                    DispatchQueue.main.async {
+//                        // prevents older image from being loaded if user dropped new one in
+//                        if url == self.emojiArt.backgroundURL {
+//                            self.backgroundImage = UIImage(data: imageData)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
     
+    private var fetchImageCancellable: AnyCancellable?
+    
+    // use publisher to perform fetchBackgroundImageData
     private func fetchBackgroundImageData() {
         backgroundImage = nil
         if let url = self.emojiArt.backgroundURL {
-            DispatchQueue.global(qos: .userInitiated).async {
-                if let imageData = try? Data(contentsOf: url) {
-                    DispatchQueue.main.async {
-                        // prevents older image from being loaded if user dropped new one in
-                        if url == self.emojiArt.backgroundURL {
-                            self.backgroundImage = UIImage(data: imageData)
-                        }
-                    }
-                }
-            }
+            fetchImageCancellable?.cancel() // cancels old image if new one is placed before old is loaded
+            fetchImageCancellable = URLSession.shared.dataTaskPublisher(for: url)
+                .map { data, urlResponse in UIImage(data: data) } // forces publisher to return a UIImage rather than a tuple (data and URLResponse)
+                .receive(on: DispatchQueue.main)
+                .replaceError(with: nil) // changes error type to never, allows us to use sink or assign
+                .assign(to: \.backgroundImage, on: self) // output of publisher assigned to backgroundImage
         }
     }
 }
