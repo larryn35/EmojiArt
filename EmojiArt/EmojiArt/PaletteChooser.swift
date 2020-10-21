@@ -54,25 +54,40 @@ struct PaletteEditor: View {
                 .font(.headline)
                 .padding()
             Divider()
-            
-            // Rename palette
-            TextField("Palette Name", text: $paletteName, onEditingChanged: { began in
-                if !began { // rename palette when editing ends
-                    document.renamePalette(chosenPalette, to: paletteName)
+            Form {
+                Section(header: Text("Palette Name")) {
+                    // Rename palette
+                    TextField("Palette Name", text: $paletteName, onEditingChanged: { began in
+                        if !began { // rename palette when editing ends
+                            document.renamePalette(chosenPalette, to: paletteName)
+                        }
+                    })
+                    //                    .padding() - no longer needed, form takes care of padding
+                    
+                    
+                    // Add emojis
+                    TextField("Add Emoji", text: $emojisToAdd, onEditingChanged: { began in
+                        if !began { // rename palette when editing ends
+                            chosenPalette = document.addEmoji(emojisToAdd, toPalette: chosenPalette)
+                            emojisToAdd = ""
+                        }
+                    })
+                    //                .padding()
                 }
-            })
-                .padding()
-            
-            // Add emojis
-            TextField("Add Emoji", text: $emojisToAdd, onEditingChanged: { began in
-                if !began { // rename palette when editing ends
-                    chosenPalette = document.addEmoji(emojisToAdd, toPalette: chosenPalette)
-                    emojisToAdd = ""
+                
+                // Remove Emoji
+                Section(header: Text("Remove Emoji")) {
+                    VStack {
+                        ForEach(chosenPalette.map { String($0) }, id: \.self) { emoji in
+                            Text(emoji)
+                                .onTapGesture {
+                                    chosenPalette = document.removeEmoji(emoji, fromPalette: chosenPalette)
+                                }
+                        }
+                    }
                 }
-            })
-                .padding()
-            
-            Spacer()
+            }
+            //            Spacer() - no longer needed, forms take up entire space given to it
         }
         .onAppear { paletteName = document.paletteNames[chosenPalette] ?? "" }
     }
