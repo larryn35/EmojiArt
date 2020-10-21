@@ -31,8 +31,8 @@ struct PaletteChooser: View {
                 .onTapGesture {
                     showPaletteEditor = true
                 }
-                .popover(isPresented: $showPaletteEditor) {
-                    PaletteEditor(chosenPalette: $chosenPalette)
+                .sheet(isPresented: $showPaletteEditor) {
+                    PaletteEditor(chosenPalette: $chosenPalette, isShowing: $showPaletteEditor)
                         .environmentObject(document)
                         .frame(minWidth: 300, minHeight: 500)
                 }
@@ -45,14 +45,24 @@ struct PaletteEditor: View {
     // anytime we want to present something in a separate view, such as a popover, viewmodel should be passed using environmentobject
     @EnvironmentObject var document: EmojiArtDocument
     @Binding var chosenPalette: String
+    @Binding var isShowing: Bool // same as showPaletteEditor in palettechooser above
     @State private var paletteName: String = ""
     @State private var emojisToAdd: String = ""
     
     var body: some View {
         VStack(spacing: 0) {
-            Text("Palette Editor")
-                .font(.headline)
-                .padding()
+            ZStack {
+                Text("Palette Editor")
+                    .font(.headline)
+                    .padding()
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        isShowing = false
+                    }, label: { Text("Done") })
+                        .padding()
+                }
+            }
             Divider()
             Form {
                 Section(header: Text("Palette Name")) {
@@ -62,9 +72,7 @@ struct PaletteEditor: View {
                             document.renamePalette(chosenPalette, to: paletteName)
                         }
                     })
-                    //                    .padding() - no longer needed, form takes care of padding
-                    
-                    
+                                        
                     // Add emojis
                     TextField("Add Emoji", text: $emojisToAdd, onEditingChanged: { began in
                         if !began { // rename palette when editing ends
@@ -72,7 +80,6 @@ struct PaletteEditor: View {
                             emojisToAdd = ""
                         }
                     })
-                    //                .padding()
                 }
                 
                 // Remove Emoji
@@ -87,7 +94,6 @@ struct PaletteEditor: View {
                     .frame(height: height)
                 }
             }
-            //            Spacer() - no longer needed, forms take up entire space given to it
         }
         .onAppear { paletteName = document.paletteNames[chosenPalette] ?? "" }
     }
