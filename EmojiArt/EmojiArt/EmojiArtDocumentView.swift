@@ -48,10 +48,13 @@ struct EmojiArtDocumentView: View {
                         }
                     }
                 }
-                .clipped() // prevent large images from blocking our HStack of emojis
+                .clipped()
                 .gesture(panGesture())
                 .gesture(zoomGesture())
                 .edgesIgnoringSafeArea([.horizontal, .bottom])
+                .onReceive(document.$backgroundImage) { image in
+                    self.zoomToFit(image, in: geometry.size)
+                }
                 .onDrop(of: ["public.image", "public.text"], isTargeted: nil) { providers, location in
                     // for dropped emoji
                     var location = geometry.convert(location, from: .global)
@@ -121,11 +124,6 @@ struct EmojiArtDocumentView: View {
             steadyStateZoomScale = min(hZoom, vZoom)
         }
     }
-    
-//    Use font modifier to fix emoji resize animation upon double tap to fit image
-//    private func font(for emoji: EmojiArt.Emoji) -> Font {
-//        Font.system(size: emoji.fontSize * zoomScale)
-//    }
     
     private func position(for emoji: EmojiArt.Emoji, in size: CGSize) -> CGPoint {
         var location = emoji.location

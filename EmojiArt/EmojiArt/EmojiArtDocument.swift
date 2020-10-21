@@ -8,24 +8,36 @@
 // ViewModel
 
 import SwiftUI
+import Combine
 
 class EmojiArtDocument: ObservableObject {
     
     static let palette: String = "🐶🐱🐭🐹🦊🐻🐼"
     
-    @Published private var emojiArt: EmojiArt = EmojiArt() {
-        didSet {
-            print("json = \(emojiArt.json?.utf8 ?? "nil")")
-        }
-    }
+//    @Published private var emojiArt: EmojiArt = EmojiArt() {
+//        didSet {
+//            print("json = \(emojiArt.json?.utf8 ?? "nil")")
+//        }
+//    }
+    
+    // use projectedValue ($emojiArt) of published struct
+    @Published private var emojiArt: EmojiArt
     
     private static let untitled = "EmojiArtDocument.untitled"
     
+    // allows sink to live past execution of init
+    private var autosaveCancellable: AnyCancellable? // AnyCancellable is a type-erased version for the sink contents
+    
     init() {
         emojiArt = EmojiArt(json: UserDefaults.standard.data(forKey: EmojiArtDocument.untitled)) ?? EmojiArt()
+        autosaveCancellable = $emojiArt.sink { emojiArt in
+            print("\(emojiArt.json?.utf8 ?? "nil")")
+            UserDefaults.standard.set(emojiArt.json, forKey: EmojiArtDocument.untitled)
+        }
         fetchBackgroundImageData()
     }
     
+    // want background image to automatically resize upon dropping, can use $backgroundImage in view to trigger
     @Published private(set) var backgroundImage: UIImage?
     
     var emojis: [EmojiArt.Emoji] { emojiArt.emojis }
