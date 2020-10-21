@@ -45,6 +45,8 @@ struct PaletteEditor: View {
     // anytime we want to present something in a separate view, such as a popover, viewmodel should be passed using environmentobject
     @EnvironmentObject var document: EmojiArtDocument
     @Binding var chosenPalette: String
+    @State private var paletteName: String = ""
+    @State private var emojisToAdd: String = ""
     
     var body: some View {
         VStack(spacing: 0) {
@@ -52,10 +54,27 @@ struct PaletteEditor: View {
                 .font(.headline)
                 .padding()
             Divider()
-            Text(document.paletteNames[chosenPalette] ?? "")
+            
+            // Rename palette
+            TextField("Palette Name", text: $paletteName, onEditingChanged: { began in
+                if !began { // rename palette when editing ends
+                    document.renamePalette(chosenPalette, to: paletteName)
+                }
+            })
                 .padding()
+            
+            // Add emojis
+            TextField("Add Emoji", text: $emojisToAdd, onEditingChanged: { began in
+                if !began { // rename palette when editing ends
+                    chosenPalette = document.addEmoji(emojisToAdd, toPalette: chosenPalette)
+                    emojisToAdd = ""
+                }
+            })
+                .padding()
+            
             Spacer()
         }
+        .onAppear { paletteName = document.paletteNames[chosenPalette] ?? "" }
     }
 }
 
