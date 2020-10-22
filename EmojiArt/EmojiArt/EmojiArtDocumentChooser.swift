@@ -27,7 +27,7 @@ struct EmojiArtDocumentChooser: View {
                 store.addDocument()
             }, label: {
                 Image(systemName: "plus").imageScale(.large)
-            }))
+            }), trailing: EditButton())
         }
     }
 }
