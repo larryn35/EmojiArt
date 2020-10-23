@@ -27,6 +27,10 @@ class EmojiArtDocument: ObservableObject, Hashable, Identifiable, Equatable {
     // use projectedValue ($emojiArt) of published struct
     @Published private var emojiArt: EmojiArt
         
+    // preserve size of image when navigating
+    @Published var steadyStateZoomScale: CGFloat = 1.0
+    @Published var steadyStatePanOffset: CGSize = .zero
+    
     // allows sink to live past execution of init
     private var autosaveCancellable: AnyCancellable? // AnyCancellable is a type-erased version for the sink contents
     
