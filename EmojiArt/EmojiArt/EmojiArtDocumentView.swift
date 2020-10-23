@@ -87,6 +87,7 @@ struct EmojiArtDocumentView: View {
                         }
                 }))
             }
+            .zIndex(-1)
         }
         // cannot use >1 alert in the same view; confirm new image paste
         .alert(isPresented: $confirmBackgroundPaste) {
