@@ -10,6 +10,8 @@ import SwiftUI
 struct EmojiArtDocumentChooser: View {
     @EnvironmentObject var store: EmojiArtDocumentStore
     
+    @State private var editMode: EditMode = .inactive
+    
     var body: some View {
         NavigationView {
             List {
@@ -18,12 +20,14 @@ struct EmojiArtDocumentChooser: View {
                         destination: EmojiArtDocumentView(document: document)
                             .navigationBarTitle(store.name(for: document))
                     ) {
-                        Text(self.store.name(for: document))
+                        EditableText(store.name(for: document), isEditing: editMode.isEditing) { name in
+                            store.setName(name, for: document)
+                        }
                     }
                 }
                 .onDelete { indexSet in
                     indexSet.map { self.store.documents[$0] }.forEach { document in
-                        self.store.removeDocument(document)
+                        store.removeDocument(document)
                     }
                 }
             }
@@ -34,6 +38,8 @@ struct EmojiArtDocumentChooser: View {
                 Image(systemName: "plus").imageScale(.large)
             }), trailing: EditButton()
             )
+            // sets environment on the view it calls on, that view must have EditButton
+            .environment(\.editMode, $editMode)
         }
     }
 }
