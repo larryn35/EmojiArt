@@ -29,7 +29,7 @@ struct EmojiArtDocumentView: View {
                 }
                 .onAppear { chosenPalette = document.defaultPalette }
             }
-
+            
             GeometryReader { geometry in
                 ZStack {
                     Color.white.overlay(
@@ -70,21 +70,45 @@ struct EmojiArtDocumentView: View {
                     return self.drop(providers: providers, at: location)
                 }
                 .navigationBarItems(trailing: Button(action: {
-                    if let url = UIPasteboard.general.url {
-                        document.backgroundURL = url
+                    // won't paste if image is already background
+                    if let url = UIPasteboard.general.url, url != document.backgroundURL {
+                        confirmBackgroundPaste = true
+                    } else {
+                        explainBackgroundPaste = true
                     }
                 }, label: {
                     Image(systemName: "doc.on.clipboard").imageScale(.large)
+                        .alert(isPresented: $explainBackgroundPaste) {
+                            return Alert(
+                                title: Text("Paste Background"),
+                                message: Text("Copy image's URL image to clipboard and touch this button to set image as background"),
+                                dismissButton: .default(Text("OK")) // default button will set explainBackgroundPaste back to false
+                            )
+                        }
                 }))
             }
         }
+        // cannot use >1 alert in the same view; confirm new image paste
+        .alert(isPresented: $confirmBackgroundPaste) {
+            return Alert(
+                title: Text("Paste Background"),
+                message: Text("Replace your background with \(UIPasteboard.general.url?.absoluteString ?? "nothing")?"),
+                primaryButton: .default(Text("OK")) {
+                    document.backgroundURL = UIPasteboard.general.url
+                },
+                secondaryButton: .cancel()
+            )
+        }
     }
+    
+    @State private var explainBackgroundPaste = false
+    @State private var confirmBackgroundPaste = false
     
     var isLoading: Bool {
         document.backgroundURL != nil && document.backgroundImage == nil
     }
     
-//    @State private var steadyStatePanOffset: CGSize = .zero
+    //    @State private var steadyStatePanOffset: CGSize = .zero
     @GestureState private var gesturePanOffset: CGSize = .zero
     
     private var panOffset: CGSize {
@@ -102,7 +126,7 @@ struct EmojiArtDocumentView: View {
     }
     
     // move to view model to preserve size when navigating in/out
-//    @State private var steadyStateZoomScale: CGFloat = 1.0
+    //    @State private var steadyStateZoomScale: CGFloat = 1.0
     @GestureState private var gestureZoomScale: CGFloat = 1.0
     
     private var zoomScale: CGFloat {
